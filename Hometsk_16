@@ -1,0 +1,68 @@
+#Створюємо три нові класи моделей для наших і вже існуючих табличок в базі даних student.db
+class Student(Base):
+    __tablename__ = 'student'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    age = Column(Integer)
+
+    def __str__(self):
+        return f'This is {self.id} student {self.name}. Age: {self.age}'
+
+class Subject(Base):
+    __tablename__ = 'subject'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+class StudentSubject(Base):
+    __tablename__ = 'student_subject'
+
+    student_id = Column(Integer, ForeignKey('student.id'), primary_key=True)
+    subject_id = Column(Integer, ForeignKey('subject.id'), primary_key=True)
+    grade = Column(Integer)
+    
+    student = relationship("Student")
+    subject = relationship("Subject")
+
+
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+# Створюємо підключення до бази даних student.db 
+DATABASE_URI = 'postgresql://{user}:{password}@{host}:{port}/{database}'
+engine = create_engine(
+    DATABASE_URI.format(
+        host='localhost',
+        database='student',
+        user='postgres',
+        password='80505078550woWw!',
+        port=5432,
+    )
+)
+
+# Створюємо сесію для взаємодії з базою даних
+Session = sessionmaker(bind=engine)
+session = Session()
+
+#Створюємо таблиці на основі певних класів моделей
+Base.metadata.create_all(engine)    
+
+#Перевірка підключення 
+first_student = session.query(Student).first() 
+print(first_student)
+#Знайдіть імена всіх студентів, які відвідували заняття з англійської мови.
+
+english_students = session.query(Student.name).\
+    join(StudentSubject, Student.id == StudentSubject.student_id).\
+    join(Subject, StudentSubject.subject_id == Subject.id).\
+    filter(Subject.name == 'English').distinct().all()
+
+# Rewrite queries from the previous lesson using SQLAlchemy.
+# Перепишіть запити з попереднього уроку, використовуючи SQLAlchemy.
+
+english_students = session.query(Student.name).\
+    join(StudentSubject, Student.id == StudentSubject.student_id).\
+    join(Subject, StudentSubject.subject_id == Subject.id).\
+    filter(Subject.name == 'English').distinct().all()
